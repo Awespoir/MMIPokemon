@@ -1,0 +1,31 @@
+{
+  "name": "mmipokemon",
+  "version": "1.0.0",
+  "description": "Projet de cours MMI semestre 6",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --env-file=props.env src/server.js ",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Awespoir/MMIPokemon.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Awespoir/MMIPokemon/issues"
+  },
+  "homepage": "https://github.com/Awespoir/MMIPokemon#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.2",
+    "nodemon": "^3.1.14"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "supertest": "^7.2.2"
+  }
+}
