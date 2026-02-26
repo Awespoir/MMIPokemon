@@ -1,31 +1,30 @@
-const express = require('express');
-const router = express.Router();
-const auth = require('../middlewares/auth.middleware');
-const { roleMiddleware } = require('../middlewares/role.middleware');
-
-// Controller qui gère la récupération des types
+const router = require("express").Router();
+const controller = require("../controllers/pokemon.controller");
 const pkmnTypeController = require('../controllers/pkmnType.controller');
+const auth = require("../middlewares/auth.middleware");
+const role = require("../middlewares/role.middleware");
 
-// GET /api/pkmn/types
 router.get('/types', pkmnTypeController.getTypes);
 
-// Exemple : création Pokémon réservée aux ADMIN
-router.post('/', auth, roleMiddleware('ADMIN'), (req, res) => {
-  // Récupérer le nom envoyé dans la requête
-  const { name } = req.body;
 
-  // Retourner le message dynamique
-  res.status(200).json({ message: `Pokémon ${name} créé !` });
-});
+// Création
+router.post("/", auth, controller.create);
 
-// Exemple : lecture Pokémon accessible aux USER et ADMIN
-router.get(
-  '/',
-  auth,
-  roleMiddleware(['USER', 'ADMIN']),
-  (req, res) => {
-    res.json({ data: ['Pikachu', 'Bulbasaur'] });
-  }
-);
+// Recherche
+router.get("/search", auth, controller.search);
+
+// Récupérer un Pokémon unique
+router.get("/", auth, controller.getOne);
+
+// Modification (ADMIN)
+router.put("/", auth, role.hasRole("ADMIN"), controller.update);
+
+// Suppression (ADMIN)
+router.delete("/", auth, role.hasRole("ADMIN"), controller.delete);
+
+// Gestion des régions
+router.post("/region", auth, controller.addRegion);
+router.delete("/region", auth, role.hasRole("ADMIN"), controller.removeRegion);
 
 module.exports = router;
+

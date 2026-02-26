@@ -1,11 +1,7 @@
-exports.roleMiddleware = (allowedRoles) => {
-  if (!Array.isArray(allowedRoles)) allowedRoles = [allowedRoles];
-
+exports.hasRole = (role) => {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: 'Non authentifié' });
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Accès interdit' });
-    }
+    if (req.user.role !== role)
+      return res.status(403).json({ message: "Forbidden" });
     next();
   };
 };

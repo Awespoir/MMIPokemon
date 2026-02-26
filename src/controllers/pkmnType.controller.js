@@ -1,14 +1,10 @@
-const pkmnTypeService = require('../services/pkmnType.service');
+const typeService = require("../services/pkmnType.service");
 
-const getTypes = (req, res) => {
-  const types = pkmnTypeService.getAllTypes();
+exports.getTypes = (req, res) => {
+  const types = typeService.getAllTypes();
 
-  res.status(200).json({
+  res.json({
     data: types,
     count: types.length
   });
-};
-
-module.exports = {
-  getTypes
 };

@@ -1,9 +1,5 @@
-const PkmnType = require('../models/pkmnType.model');
+const PkmnType = require("../models/pkmnType.model");
 
-const getAllTypes = () => {
-  return [...PkmnType]; 
-};
-
-module.exports = {
-  getAllTypes
+exports.getAllTypes = () => {
+  return PkmnType;
 };
