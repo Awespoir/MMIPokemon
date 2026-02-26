@@ -1,32 +1,62 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Login from "./components/Login";
+import Pokedex from "./components/Pokedex";
 import Trainer from "./components/Trainer";
-import { setToken } from "./api/api";
+import { setToken, getTrainer } from "./api/api";
 
 function App() {
-  const [token, setTokenState] = useState(localStorage.getItem("token") || null);
+  const [tokenState, setTokenState] = useState(localStorage.getItem("token"));
+  const [trainer, setTrainer] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogin = (t) => {
-    localStorage.setItem("token", t); // garde le token
-    setToken(t); // met à jour l'API axios
-    setTokenState(t);
+  // Récupère le trainer au chargement si token existe
+  useEffect(() => {
+    const fetchTrainer = async () => {
+      if (!tokenState) {
+        setTrainer(null);
+        setLoading(false);
+        return;
+      }
+      try {
+        const data = await getTrainer();
+        setTrainer(data);
+      } catch (err) {
+        console.error(err);
+        // si token invalide -> déconnecter
+        handleLogout();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrainer();
+  }, [tokenState]);
+
+  const handleLogin = (token) => {
+    setToken(token);        // update api.js
+    setTokenState(token);   // update App state
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setToken(null); // supprime le token côté API
-    setTokenState(null); // retour à l'écran login
+    setToken(null);         // supprime token dans api.js et localStorage
+    setTokenState(null);    // reset App state
+    setTrainer(null);
   };
+
+  if (loading) return <p>Chargement...</p>;
 
   return (
     <div className="App">
-      {token ? (
-        <Trainer onLogout={handleLogout} />
-      ) : (
-        <Login onLogin={handleLogin} />
-      )}
-    </div>
+      {!tokenState ? (
+  <Login onLogin={handleLogin} />
+) : (
+  <div>
+    <Trainer trainer={trainer} onLogout={handleLogout} setTrainer={setTrainer} />
+    <Pokedex />
+  </div>
+)}
+</div>
   );
 }
 
-export default App;
+export default App; 

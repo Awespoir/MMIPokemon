@@ -1,46 +1,50 @@
 import { useState, useEffect } from "react";
 import {
-  getTrainer,
   updateTrainer,
   deleteTrainer,
   markPokemon,
+  
 } from "../api/api";
 
-export default function Trainer({ onLogout }) {
-  const [trainer, setTrainer] = useState(null);
+export default function Trainer({ trainer, setTrainer, onLogout }) {
   const [newName, setNewName] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  // Préremplir le champ quand trainer change
   useEffect(() => {
-    const fetchTrainer = async () => {
-      try {
-        const data = await getTrainer();
-        setTrainer(data);
-        setNewName(data.trainerName); // préremplir le champ
-      } catch (err) {
-        console.error(err);
-        setError("Impossible de récupérer le dresseur");
-      }
-    };
-    fetchTrainer();
-  }, []);
+    if (trainer) {
+      setNewName(trainer.trainerName);
+    }
+  }, [trainer]);
+
+
 
   const handleUpdate = async () => {
+    if (!newName.trim()) {
+      setError("Le nom ne peut pas être vide");
+      return;
+    }
+
     try {
+      setLoading(true);
       const updated = await updateTrainer({ trainerName: newName });
       setTrainer(updated);
       setError("");
     } catch (err) {
       console.error(err);
       setError("Erreur lors de la mise à jour");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDelete = async () => {
     if (!window.confirm("Supprimer le dresseur ?")) return;
+
     try {
       await deleteTrainer();
-      onLogout(); // retourne à la page login
+      onLogout();
     } catch (err) {
       console.error(err);
       setError("Erreur lors de la suppression");
@@ -49,60 +53,78 @@ export default function Trainer({ onLogout }) {
 
   const handleMarkPokemon = async (pkmnId, isCaptured) => {
     try {
+      setLoading(true);
       const updated = await markPokemon(pkmnId, isCaptured);
       setTrainer(updated);
       setError("");
     } catch (err) {
       console.error(err);
       setError("Impossible de marquer le Pokémon");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!trainer) return <p>Chargement...</p>;
+  if (!trainer) return <p>Aucun dresseur trouvé</p>;
 
   return (
-    <div>
-      <h2>{trainer.trainerName}</h2>
+    <div style={{ padding: "20px" }}>
+      <h2>Bienvenue {trainer.trainerName}</h2>
+
+      <button onClick={onLogout} style={{ marginBottom: "15px" }}>
+         Déconnexion
+      </button>
+
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <div style={{ marginBottom: "1em" }}>
-        <button onClick={onLogout} style={{ marginBottom: "1em" }}>
-            Déconnexion
-        </button>
-
+      <div style={{ marginBottom: "20px" }}>
+        <h3>Modifier le nom</h3>
         <input
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
         />
-        <button onClick={handleUpdate}>Mettre à jour</button>
-        <button onClick={handleDelete} style={{ marginLeft: "1em" }}>
+        <button onClick={handleUpdate} disabled={loading}>
+          Mettre à jour
+        </button>
+        <button
+          onClick={handleDelete}
+          style={{ marginLeft: "10px", color: "red" }}
+        >
           Supprimer le dresseur
         </button>
       </div>
 
-      <h3>Pokémon vus</h3>
-      <ul>
-        {trainer.pkmnSeen.map((pkmn) => (
-          <li key={pkmn._id}>
-            {pkmn.name}{" "}
-            <button onClick={() => handleMarkPokemon(pkmn._id, true)}>
-              Capturer
-            </button>
-          </li>
-        ))}
-      </ul>
+      <div>
+        <h3>Pokémon vus</h3>
+        <ul>
+          {trainer.pkmnSeen?.map((pkmn) => (
+            <li key={pkmn._id}>
+              {pkmn.name}
+              <button
+                style={{ marginLeft: "10px" }}
+                onClick={() => handleMarkPokemon(pkmn._id, true)}
+              >
+                Capturer
+              </button>
+            </li>
+          ))}
+        </ul>
 
-      <h3>Pokémon capturés</h3>
-      <ul>
-        {trainer.pkmnCatch.map((pkmn) => (
-          <li key={pkmn._id}>
-            {pkmn.name}{" "}
-            <button onClick={() => handleMarkPokemon(pkmn._id, false)}>
-              Marquer comme vu
-            </button>
-          </li>
-        ))}
-      </ul>
+        <h3>Pokémon capturés</h3>
+        <ul>
+          {trainer.pkmnCatch?.map((pkmn) => (
+            <li key={pkmn._id}>
+              {pkmn.name}
+              <button
+                style={{ marginLeft: "10px" }}
+                onClick={() => handleMarkPokemon(pkmn._id, false)}
+              >
+                Marquer comme vu
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
