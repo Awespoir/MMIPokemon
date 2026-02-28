@@ -1,60 +1,49 @@
+// src/services/trainer.service.js
 const Trainer = require("../models/trainer.model");
+const Pokemon = require("../models/pokemon.model");
 
-// Récupérer un trainer par username
-exports.getTrainer = async (username) => {
-  if (!username) throw new Error("Username requis");
-  return Trainer.findOne({ username });
-};
+class TrainerService {
+  async getTrainer(username) {
+    if (!username) throw new Error("Username requis");
 
-// Créer un nouveau trainer
-exports.createTrainer = async (username, trainerName, imgUrl) => {
-  if (!username || !trainerName) throw new Error("Username et trainerName requis");
-
-  const existing = await Trainer.findOne({ username });
-  if (existing) return existing; // si déjà existant, retourne l’existant
-
-  const trainer = new Trainer({
-    username,
-    trainerName,
-    imgUrl,
-    pkmnSeen: [],
-    pkmnCatch: [],
-  });
-
-  return trainer.save();
-};
-
-// Mettre à jour un trainer
-exports.updateTrainer = async (username, data) => {
-  if (!username) throw new Error("Username requis");
-
-  return Trainer.findOneAndUpdate(
-    { username },
-    { $set: data },
-    { new: true, runValidators: true } // renvoie l'objet mis à jour
-  );
-};
-
-// Supprimer un trainer
-exports.deleteTrainer = async (username) => {
-  if (!username) throw new Error("Username requis");
-
-  return Trainer.findOneAndDelete({ username });
-};
-
-// Marquer un Pokémon comme vu ou capturé
-exports.markPokemon = async (username, pkmnId, isCaptured) => {
-  if (!username) throw new Error("Username requis");
-  if (!pkmnId) throw new Error("pkmnId requis");
-
-  const trainer = await Trainer.findOne({ username });
-  if (!trainer) return null;
-
-  if (isCaptured) {
-    if (!trainer.pkmnCatch.includes(pkmnId)) trainer.pkmnCatch.push(pkmnId);
-  } else {
-    if (!trainer.pkmnSeen.includes(pkmnId)) trainer.pkmnSeen.push(pkmnId);
+    let trainer = await Trainer.findOne({ username });
+    if (!trainer) {
+      // Toujours passer username et trainerName
+      trainer = await Trainer.create({
+        username,
+        trainerName: username, // par défaut le même que username
+        pkmnSeen: [],
+        pkmnCatch: []
+      });
+    }
+    return trainer;
   }
 
-  return trainer.save();
-};
+  async updateTrainer(username, updateData) {
+    const trainer = await this.getTrainer(username);
+    Object.assign(trainer, updateData);
+    await trainer.save();
+    return trainer;
+  }
+
+  async deleteTrainer(username) {
+    await Trainer.findOneAndDelete({ username });
+  }
+
+  async markPokemon(username, pkmnId, isCaptured) {
+    const trainer = await this.getTrainer(username);
+    const pkmn = await Pokemon.findById(pkmnId);
+    if (!pkmn) return null;
+
+    if (isCaptured) {
+      if (!trainer.pkmnCatch.includes(pkmnId)) trainer.pkmnCatch.push(pkmnId);
+    } else {
+      if (!trainer.pkmnSeen.includes(pkmnId)) trainer.pkmnSeen.push(pkmnId);
+    }
+
+    await trainer.save();
+    return trainer;
+  }
+}
+
+module.exports = new TrainerService();

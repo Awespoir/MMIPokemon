@@ -92,38 +92,7 @@ export default function Trainer({ trainer, setTrainer, onLogout }) {
         >
           Supprimer le dresseur
         </button>
-      </div>
-
-      <div>
-        <h3>Pokémon vus</h3>
-        <ul>
-          {trainer.pkmnSeen?.map((pkmn) => (
-            <li key={pkmn._id}>
-              {pkmn.name}
-              <button
-                style={{ marginLeft: "10px" }}
-                onClick={() => handleMarkPokemon(pkmn._id, true)}
-              >
-                Capturer
-              </button>
-            </li>
-          ))}
-        </ul>
-
-        <h3>Pokémon capturés</h3>
-        <ul>
-          {trainer.pkmnCatch?.map((pkmn) => (
-            <li key={pkmn._id}>
-              {pkmn.name}
-              <button
-                style={{ marginLeft: "10px" }}
-                onClick={() => handleMarkPokemon(pkmn._id, false)}
-              >
-                Marquer comme vu
-              </button>
-            </li>
-          ))}
-        </ul>
+        
       </div>
     </div>
   );

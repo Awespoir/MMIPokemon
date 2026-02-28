@@ -1,94 +1,214 @@
 // src/components/Pokedex.js
 import { useState, useEffect } from "react";
-import { searchPokemon } from "../api/api"; // Assure-toi que cette fonction appelle /api/pkmn/search
+import { searchPokemon, markPokemon } from "../api/api";
 
-export default function Pokedex() {
+const typeColors = {
+  grass: "#78C850",
+  fire: "#F08030",
+  water: "#6890F0",
+  poison: "#A040A0",
+  flying: "#A890F0",
+  electric: "#F8D030",
+  ground: "#E0C068",
+  rock: "#B8A038",
+  bug: "#A8B820",
+  normal: "#A8A878",
+  fairy: "#EE99AC",
+  fighting: "#C03028",
+  psychic: "#F85888",
+  ice: "#98D8D8",
+  ghost: "#705898",
+  dragon: "#7038F8",
+  dark: "#705848",
+  steel: "#B8B8D0",
+};
+
+export default function Pokedex({ trainer, setTrainer }) {
   const [pokemons, setPokemons] = useState([]);
-  const [query, setQuery] = useState("");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [size] = useState(20); // Pokémon par page
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState("all"); // all | seen | captured
+  const [selectedPokemon, setSelectedPokemon] = useState(null); // Pokémon plein écran
+  const [selectedPokemonId, setSelectedPokemonId] = useState(null);
 
-  // Fonction pour récupérer les Pokémon
-  const fetchPokemons = async () => {
-    setLoading(true);
-    try {
-      const result = await searchPokemon({ partialName: query, page, size });
-      setPokemons(result.data);
-      setTotalCount(result.count);
-    } catch (err) {
-      console.error("Erreur fetchPokemons:", err);
-    }
-    setLoading(false);
-  };
 
-  // Appelle fetchPokemons quand query ou page change
+  const pageSize = 20;
+
   useEffect(() => {
     fetchPokemons();
-  }, [query, page]);
+  }, [search, page]);
 
-  // Pagination
-  const totalPages = Math.ceil(totalCount / size);
+  const fetchPokemons = async () => {
+    try {
+      setLoading(true);
+      const res = await searchPokemon({ partialName: search, page, size: pageSize });
+      setPokemons(res.data);
+      setTotal(res.count);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Interaction Vu / Capturé
+  const handleInteraction = async (pkmnId, action) => {
+    try {
+      let isCaptured;
+      if (action === "capture") isCaptured = true;
+      else if (action === "seen") isCaptured = false;
+
+      const updatedTrainer = await markPokemon(pkmnId, isCaptured);
+      setTrainer(updatedTrainer);
+    } catch (err) {
+      console.error("Erreur interaction Pokémon :", err);
+    }
+  };
+
+ const renderCard = (p) => {
+  const seen = trainer?.pkmnSeen?.includes(p._id);
+  const captured = trainer?.pkmnCatch?.includes(p._id);
+  const isSelected = selectedPokemonId === p._id;
 
   return (
-    <div>
-      <h2>Pokédex</h2>
+    <div
+      className="pkmn-card"
+      key={p._id}
+      onClick={() => captured && setSelectedPokemonId(isSelected ? null : p._id)}
+    >
+      <img
+        src={p.imgUrl}
+        alt={p.name}
+        className={!seen ? "silhouette" : ""}
+      />
 
-      {/* Barre de recherche */}
+      <h4>{seen ? p.name : "???"}</h4>
+
+      {/* Panneau infos Pokémon capturé, reste dans la carte */}
+      <div
+        className="selected-info"
+        style={{
+          maxHeight: captured && isSelected ? "220px" : "0",
+          opacity: captured && isSelected ? 1 : 0,
+        }}
+      >
+        {captured && isSelected && (
+          <>
+            <p>{p.description}</p>
+            <div className="types">
+              {p.types.map((t) => (
+                <span
+                  key={t}
+                  style={{
+                    background: typeColors[t],
+                    color: "white",
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    margin: "2px",
+                    fontSize: "13px",
+                  }}
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Boutons interaction toujours présents */}
+      <div className="actions">
+        {!seen && (
+          <button onClick={() => handleInteraction(p._id, "seen")}>
+            👁 Vu
+          </button>
+        )}
+        {seen && !captured && (
+          <button onClick={() => handleInteraction(p._id, "capture")}>
+            🎯 Capturer
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+  // Filtrage selon bouton
+  const filteredPokemons = pokemons.filter((p) => {
+    const seen = trainer?.pkmnSeen?.includes(p._id);
+    const captured = trainer?.pkmnCatch?.includes(p._id);
+
+    if (filter === "seen") return seen && !captured;
+    if (filter === "captured") return captured;
+    return true;
+  });
+
+  return (
+    <div className="pokedex">
+      <h2>POKÉDEX</h2>
+
+      <div className="filters">
+        <button className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>
+          Tous
+        </button>
+        <button className={filter === "seen" ? "active" : ""} onClick={() => setFilter("seen")}>
+          Vu
+        </button>
+        <button className={filter === "captured" ? "active" : ""} onClick={() => setFilter("captured")}>
+          Capturés
+        </button>
+      </div>
+
       <input
-        type="text"
-        placeholder="Rechercher un Pokémon..."
-        value={query}
+        placeholder="Rechercher..."
+        value={search}
         onChange={(e) => {
-          setQuery(e.target.value);
-          setPage(1); // Reset page à 1 pour une nouvelle recherche
+          setSearch(e.target.value);
+          setPage(1);
         }}
       />
 
-      {loading && <p>Chargement...</p>}
+      {loading ? (
+        <p>Chargement...</p>
+      ) : (
+        <div className="grid">
+          {filteredPokemons.map(renderCard)}
+        </div>
+      )}
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-        {pokemons.map((p) => (
-          <div
-            key={p._id}
-            style={{
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-              padding: "0.5rem",
-              width: "150px",
-              textAlign: "center",
-            }}
-          >
-            <img
-              src={p.imgUrl}
-              alt={p.name}
-              style={{ width: "100px", height: "100px" }}
-            />
-            <h4>{p.name}</h4>
-            <p style={{ fontSize: "0.8rem" }}>{p.types.join(", ")}</p>
-          </div>
-        ))}
+      <div className="pagination">
+        <button disabled={page === 1} onClick={() => setPage(page - 1)}>←</button>
+        <span>{page} / {Math.ceil(total / pageSize)}</span>
+        <button disabled={page * pageSize >= total} onClick={() => setPage(page + 1)}>→</button>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div style={{ marginTop: "1rem" }}>
-          <button
-            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            disabled={page === 1}
-          >
-            {"<"} Précédent
-          </button>
-          <span style={{ margin: "0 1rem" }}>
-            Page {page} / {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-            disabled={page === totalPages}
-          >
-            Suivant {">"}
-          </button>
+      {/* Pokémon plein écran */}
+      {selectedPokemon && (
+        <div className="pkmn-fullscreen" onClick={() => setSelectedPokemon(null)}>
+          <div className="pkmn-info">
+            <img src={selectedPokemon.imgUrl} alt={selectedPokemon.name} />
+            <h2>{selectedPokemon.name}</h2>
+            <p>{selectedPokemon.description}</p>
+            <div>
+              {selectedPokemon.types.map((t) => (
+                <span
+                  key={t}
+                  style={{
+                    background: typeColors[t],
+                    color: "white",
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    margin: "2px",
+                    fontSize: "14px",
+                  }}
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import "./App.css";
 import Login from "./components/Login";
 import Pokedex from "./components/Pokedex";
 import Trainer from "./components/Trainer";
@@ -52,7 +53,10 @@ function App() {
 ) : (
   <div>
     <Trainer trainer={trainer} onLogout={handleLogout} setTrainer={setTrainer} />
-    <Pokedex />
+    <Pokedex
+  trainer={trainer}
+  setTrainer={setTrainer}
+/>
   </div>
 )}
 </div>

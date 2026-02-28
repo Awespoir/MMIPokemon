@@ -1,38 +1,102 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.pokedex {
+  width: 100vw;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
+  background: linear-gradient(135deg, #222, #444);
+  color: #fff;
+}
+
+.pokedex h2 {
+  margin-bottom: 15px;
+}
+
+.pokedex input {
+  width: 50%;
+  max-width: 400px;
+  padding: 8px 12px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  gap: 20px;
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+  padding: 10px;
+}
+
+.pkmn-card {
+  width: 220px;
+  min-height: 320px;
+  background: #4f4f4f;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s ease;
+  position: relative;
+  cursor: pointer;
+  color: #fff;
+}
+
+.pkmn-card:hover {
+  transform: scale(1.05);
+}
+
+.pkmn-card img {
+  width: 150px;
+  height: 150px;
+  transition: filter 0.5s ease;
+}
+
+.silhouette {
+  filter: brightness(0);
+  transition: filter 0.3s ease;
+}
+
+.selected-info {
+  margin-top: 10px;
+  width: 90%;
+  text-align: center;
+  transition: max-height 0.5s ease, opacity 0.5s ease;
+  overflow: hidden;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.actions button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #f08030;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.pagination {
+  margin-top: 15px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.pagination button {
+  padding: 6px 10px;
+  margin: 0 5px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
 }

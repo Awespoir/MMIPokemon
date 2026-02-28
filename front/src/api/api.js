@@ -65,7 +65,7 @@ export const deleteTrainer = async () => {
 export const markPokemon = async (pkmnId, isCaptured) => {
   if (!token) throw new Error("No token available");
   const res = await axios.post(
-    `${API_BASE}/trainer/markPokemon`,
+    `${API_BASE}/trainer/mark`,
     { pkmnId, isCaptured },
     { headers: { Authorization: `Bearer ${token}` } }
   );
