@@ -270,3 +270,35 @@
 .auth-switch:hover {
   color: white;
 }
+
+/* Conteneur des filtres */
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  justify-content: center;
+}
+
+/* Style général des boutons de filtre */
+.filters button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #666; /* gris neutre */
+  color: #fff;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.filters button:hover {
+  background: #f08030; /* couleur orange au hover */
+  transform: scale(1.05);
+}
+
+/* Bouton actif */
+.filters button.active {
+  background: #f08030; /* orange */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  transform: scale(1.05);
+}
