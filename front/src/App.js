@@ -4,11 +4,13 @@ import Login from "./components/Login";
 import Pokedex from "./components/Pokedex";
 import Trainer from "./components/Trainer";
 import { setToken, getTrainer } from "./api/api";
+import Register from "./components/Register";
 
 function App() {
   const [tokenState, setTokenState] = useState(localStorage.getItem("token"));
   const [trainer, setTrainer] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isRegister, setIsRegister] = useState(false);
 
   // Récupère le trainer au chargement si token existe
   useEffect(() => {
@@ -49,7 +51,17 @@ function App() {
   return (
     <div className="App">
       {!tokenState ? (
-  <Login onLogin={handleLogin} />
+  isRegister ? (
+    <Register
+      onRegister={handleLogin}
+      onSwitch={() => setIsRegister(false)}
+    />
+  ) : (
+    <Login
+      onLogin={handleLogin}
+      onSwitch={() => setIsRegister(true)}
+    />
+  )
 ) : (
   <div>
     <Trainer trainer={trainer} onLogout={handleLogout} setTrainer={setTrainer} />

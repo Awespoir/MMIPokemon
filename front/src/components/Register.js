@@ -1,25 +1,26 @@
 import { useState } from "react";
-import { login } from "../api/api";
+import { registerTrainer } from "../api/api";
 
-export default function Login({ onLogin, onSwitch }) {
+export default function Register({ onRegister, onSwitch }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     if (!username.trim() || !password.trim()) {
-      setError("Tous les champs sont obligatoires");
+      setError("Le nom et le mot de passe sont obligatoires");
       return;
     }
 
     try {
       setLoading(true);
-      const data = await login(username, password);
-      onLogin(data.token);
+      // On envoie exactement ce que le backend attend
+      const newTrainer = await registerTrainer({ username, password });
+      onRegister(newTrainer); // connexion automatique
     } catch (err) {
-      console.error(err);
-      setError("Nom ou mot de passe incorrect");
+      console.error("Erreur inscription :", err.response || err);
+      setError("Erreur lors de l'inscription. Vérifie le nom et le mot de passe.");
     } finally {
       setLoading(false);
     }
@@ -28,7 +29,7 @@ export default function Login({ onLogin, onSwitch }) {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Connexion Dresseur</h2>
+        <h2>Créer un compte</h2>
 
         {error && <p className="auth-error">{error}</p>}
 
@@ -45,12 +46,12 @@ export default function Login({ onLogin, onSwitch }) {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button onClick={handleLogin} disabled={loading}>
-          {loading ? "Connexion..." : "Se connecter"}
+        <button onClick={handleRegister} disabled={loading}>
+          {loading ? "Création..." : "S'inscrire"}
         </button>
 
         <button onClick={onSwitch} className="auth-switch">
-          Pas encore de compte ? S'inscrire
+          Déjà un compte ? Se connecter
         </button>
       </div>
     </div>

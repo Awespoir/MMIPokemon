@@ -20,6 +20,11 @@ export const login = async (username, password) => {
   setToken(res.data.token);
   return res.data;
 };
+//auth
+export const registerTrainer = async (data) => {
+  const res = await axios.post("http://localhost:3000/api/auth/register", data);
+  return res.data;
+};
 
 // ---------- TRAINER ----------
 

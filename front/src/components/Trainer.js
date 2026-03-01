@@ -68,32 +68,46 @@ export default function Trainer({ trainer, setTrainer, onLogout }) {
   if (!trainer) return <p>Aucun dresseur trouvé</p>;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Bienvenue {trainer.trainerName}</h2>
+  <div className="trainer-container">
+    <div className="trainer-card">
+      <div className="trainer-header">
+        <div className="trainer-avatar">
+          {trainer.trainerName.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <h2>Bienvenue</h2>
+          <h3>{trainer.trainerName}</h3>
+        </div>
+      </div>
 
-      <button onClick={onLogout} style={{ marginBottom: "15px" }}>
-         Déconnexion
-      </button>
+      {error && <p className="trainer-error">{error}</p>}
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <div className="trainer-section">
+        <h4>Modifier le nom</h4>
+        <div className="trainer-edit">
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+          <button
+            className="primary"
+            onClick={handleUpdate}
+            disabled={loading}
+          >
+            Mettre à jour
+          </button>
+        </div>
+      </div>
 
-      <div style={{ marginBottom: "20px" }}>
-        <h3>Modifier le nom</h3>
-        <input
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-        />
-        <button onClick={handleUpdate} disabled={loading}>
-          Mettre à jour
+      <div className="trainer-actions">
+        <button className="logout" onClick={onLogout}>
+          Déconnexion
         </button>
-        <button
-          onClick={handleDelete}
-          style={{ marginLeft: "10px", color: "red" }}
-        >
+        <button className="danger" onClick={handleDelete}>
           Supprimer le dresseur
         </button>
-        
       </div>
     </div>
-  );
+  </div>
+);
 }
