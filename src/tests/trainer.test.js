@@ -2,11 +2,12 @@
 const request = require("supertest");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
+const bcrypt = require("bcrypt");
 
 const app = require("../app");
+const User = require("../models/user.model");
 const Trainer = require("../models/trainer.model");
 const Pokemon = require("../models/pokemon.model");
-const User = require("../models/user.model");
 
 let mongoServer;
 let userToken;
@@ -16,12 +17,13 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri());
 
-  const bcrypt = require("bcrypt");
   const hashed = await bcrypt.hash("123456", 10);
 
+  // Création d’un admin et d’un utilisateur
   await User.create({ username: "admin", password: hashed, role: "ADMIN" });
   await User.create({ username: "user", password: hashed, role: "USER" });
 
+  // Login pour récupérer les tokens
   const resAdmin = await request(app)
     .post("/api/auth/login")
     .send({ username: "admin", password: "123456" });
@@ -44,16 +46,15 @@ afterEach(async () => {
   await Pokemon.deleteMany({});
 });
 
-describe("📚 Trainer API corrigé", () => {
+describe("📚 Trainer API", () => {
+
   test("Créer un dresseur", async () => {
     const res = await request(app)
       .post("/api/trainer")
       .set("Authorization", `Bearer ${userToken}`)
       .send({ trainerName: "Sacha", imgUrl: "http://img.sacha.png" });
 
-    // On accepte 201 (créé) ou 400 (déjà existant)
-    expect([201, 400]).toContain(res.statusCode);
-
+    expect([201, 200]).toContain(res.statusCode);
     if (res.statusCode === 201) {
       expect(res.body.trainerName).toBe("Sacha");
       expect(res.body.username).toBe("user");
@@ -63,7 +64,7 @@ describe("📚 Trainer API corrigé", () => {
   });
 
   test("Récupérer le dresseur", async () => {
-    // Créer d'abord
+    // Créer d’abord
     await request(app)
       .post("/api/trainer")
       .set("Authorization", `Bearer ${userToken}`)
@@ -79,7 +80,7 @@ describe("📚 Trainer API corrigé", () => {
   });
 
   test("Mettre à jour le trainer", async () => {
-    // Créer d'abord
+    // Créer d’abord
     await request(app)
       .post("/api/trainer")
       .set("Authorization", `Bearer ${userToken}`)
@@ -95,7 +96,7 @@ describe("📚 Trainer API corrigé", () => {
   });
 
   test("Supprimer le trainer", async () => {
-    // Créer d'abord
+    // Créer d’abord
     await request(app)
       .post("/api/trainer")
       .set("Authorization", `Bearer ${userToken}`)
@@ -109,7 +110,7 @@ describe("📚 Trainer API corrigé", () => {
   });
 
   test("Marquer un Pokémon comme vu ou capturé", async () => {
-    // Créer d'abord le trainer
+    // Créer le trainer
     await request(app)
       .post("/api/trainer")
       .set("Authorization", `Bearer ${userToken}`)

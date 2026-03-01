@@ -1,21 +1,41 @@
-// src/services/trainer.service.js
 const Trainer = require("../models/trainer.model");
 const Pokemon = require("../models/pokemon.model");
 
 class TrainerService {
-  async getTrainer(username) {
+  // Récupérer le trainer sans le créer automatiquement
+  async findTrainer(username) {
     if (!username) throw new Error("Username requis");
+    return await Trainer.findOne({ username });
+  }
 
-    let trainer = await Trainer.findOne({ username });
+  // Récupérer le trainer, le créer si inexistant (uniquement pour get)
+  async getTrainer(username) {
+    let trainer = await this.findTrainer(username);
     if (!trainer) {
-      // Toujours passer username et trainerName
       trainer = await Trainer.create({
         username,
         trainerName: username, // par défaut le même que username
+        imgUrl: "",
         pkmnSeen: [],
         pkmnCatch: []
       });
     }
+    return trainer;
+  }
+
+  // Créer un trainer explicitement
+  async createTrainer(username, trainerName, imgUrl = "") {
+    let trainer = await this.findTrainer(username);
+    if (trainer) return trainer;
+
+    trainer = await Trainer.create({
+      username,
+      trainerName: trainerName || username,
+      imgUrl,
+      pkmnSeen: [],
+      pkmnCatch: []
+    });
+
     return trainer;
   }
 
@@ -26,8 +46,13 @@ class TrainerService {
     return trainer;
   }
 
+  // Suppression sécurisée : ne recrée pas automatiquement
   async deleteTrainer(username) {
-    await Trainer.findOneAndDelete({ username });
+    const trainer = await this.findTrainer(username);
+    if (!trainer) return null;
+
+    await Trainer.deleteOne({ username });
+    return trainer; // renvoie l'ancien trainer
   }
 
   async markPokemon(username, pkmnId, isCaptured) {

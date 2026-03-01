@@ -1,12 +1,11 @@
-process.env.JWT_SECRET = "supersecretkey";
-
+// src/tests/pokemon.test.js
 const request = require("supertest");
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
 const app = require("../app");
-const User = require("../models/user.model");
 const Pokemon = require("../models/pokemon.model");
+const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
 
 let mongoServer;
@@ -19,6 +18,7 @@ beforeAll(async () => {
 
   const hashed = await bcrypt.hash("123456", 10);
 
+  // Création d'utilisateurs admin et user
   await User.create({ username: "admin", password: hashed, role: "ADMIN" });
   await User.create({ username: "user", password: hashed, role: "USER" });
 
@@ -44,7 +44,6 @@ afterEach(async () => {
 });
 
 describe("📦 Pokémon API", () => {
-
   test("Créer un Pokémon (USER)", async () => {
     const res = await request(app)
       .post("/api/pkmn")
@@ -72,16 +71,21 @@ describe("📦 Pokémon API", () => {
     expect(res.body.name).toBe("Bulbasaur");
   });
 
-  test("Ajouter une région", async () => {
-    const pkmn = await Pokemon.create({ name: "Charmander", imgUrl: "http://img.charm.png", types: ["FIRE"] });
+  test("Recherche Pokémon par type et partialName", async () => {
+    await Pokemon.insertMany([
+      { name: "Pidgey", imgUrl: "http://img.pidgey.png", types: ["FLYING"] },
+      { name: "Zapdos", imgUrl: "http://img.zapdos.png", types: ["ELECTRIC","FLYING"] },
+      { name: "Electabuzz", imgUrl: "http://img.electabuzz.png", types: ["ELECTRIC"] }
+    ]);
 
     const res = await request(app)
-      .post("/api/pkmn/region")
+      .get("/api/pkmn/search")
       .set("Authorization", `Bearer ${userToken}`)
-      .send({ pkmnID: pkmn._id.toString(), regionName: "Kanto", regionPokedexNumber: 4 });
+      .query({ typeOne: "FLYING", partialName: "Zap" });
 
     expect(res.statusCode).toBe(200);
-    expect(res.body.regions[0].regionName).toBe("Kanto");
+    expect(res.body.count).toBe(1);
+    expect(res.body.data[0].name).toBe("Zapdos");
   });
 
   test("Modifier un Pokémon (ADMIN)", async () => {
@@ -108,40 +112,27 @@ describe("📦 Pokémon API", () => {
     expect(res.statusCode).toBe(204);
   });
 
-  test("Recherche Pokémon par type et partialName", async () => {
-    await Pokemon.insertMany([
-      { name: "Pidgey", imgUrl: "http://img.pidgey.png", types: ["FLYING"] },
-      { name: "Zapdos", imgUrl: "http://img.zapdos.png", types: ["ELECTRIC", "FLYING"] },
-      { name: "Electabuzz", imgUrl: "http://img.electabuzz.png", types: ["ELECTRIC"] }
-    ]);
+  test("Ajouter et supprimer une région (USER/ADMIN)", async () => {
+    const pkmn = await Pokemon.create({ name: "Charmander", imgUrl: "http://img.charm.png", types: ["FIRE"] });
 
-    const res = await request(app)
-      .get("/api/pkmn/search")
+    // Ajouter région
+    const resAdd = await request(app)
+      .post("/api/pkmn/region")
       .set("Authorization", `Bearer ${userToken}`)
-      .query({ typeOne: "FLYING", partialName: "Zap" });
+      .send({ pkmnId: pkmn._id.toString(), regionName: "Kanto", regionPokedexNumber: 4 });
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body.count).toBe(1);
-    expect(res.body.data[0].name).toBe("Zapdos");
-  });
+    expect(resAdd.statusCode).toBe(200);
+    expect(resAdd.body.regions[0].regionName).toBe("Kanto");
 
-  test("Supprimer une région (ADMIN)", async () => {
-    const pkmn = await Pokemon.create({
-      name: "Snorlax",
-      imgUrl: "http://img.snorlax.png",
-      types: ["NORMAL"],
-      regions: [{ regionName: "Kanto", regionPokedexNumber: 143 }]
-    });
-
-    const res = await request(app)
+    // Supprimer région
+    const resRemove = await request(app)
       .delete("/api/pkmn/region")
       .set("Authorization", `Bearer ${adminToken}`)
-      .query({ pkmnID: pkmn._id.toString(), regionName: "Kanto" });
+      .query({ pkmnId: pkmn._id.toString(), regionName: "Kanto" });
 
-    expect(res.statusCode).toBe(204);
+    expect(resRemove.statusCode).toBe(204);
 
     const updated = await Pokemon.findById(pkmn._id);
     expect(updated.regions.length).toBe(0);
   });
-
 });
